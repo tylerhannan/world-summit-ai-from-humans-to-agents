@@ -1,0 +1,5 @@
+anthropic>=1.0
+langfuse>=4.14
+mcp>=1.20,<2
+clickhouse-connect>=0.8
+python-dotenv>=1.0
