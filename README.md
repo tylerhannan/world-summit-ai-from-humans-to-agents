@@ -28,7 +28,7 @@ sql/                  user setup, data load, query_log queries
 
 - A [ClickHouse Cloud](https://clickhouse.com/cloud) service (the free trial is enough)
 - A [Langfuse Cloud](https://cloud.langfuse.com) project
-- An [Anthropic API key](https://console.anthropic.com)
+- An [Anthropic API key](https://platform.claude.com)
 - Python 3.10+ and [uv](https://docs.astral.sh/uv/) (`brew install uv`), which runs the MCP server
 
 A full run (50-agent load test plus two 20-question experiments) costs well under $1 with the default model, Claude Haiku 4.5.
@@ -47,7 +47,7 @@ It generates the MCP auth token for you. Everything below is the manual version 
 
 ## Manual setup (about 20 minutes)
 
-**1. ClickHouse Cloud.** In the SQL console, run `sql/01_load_uk_price_paid.sql` (the insert takes a minute or two), then `sql/00_create_user.sql` with a real password. If you prefer the CLI, [`clickhousectl`](https://clickhouse.com/docs/cloud) can create the service and run both files.
+**1. ClickHouse Cloud.** In the SQL console, run `sql/01_load_uk_price_paid.sql` (the insert takes a minute or two), then `sql/00_create_user.sql` with a real password. If you prefer the CLI, [`clickhousectl`](https://github.com/ClickHouse/clickhousectl) can create the service and run both files.
 
 **2. Langfuse Cloud.** Create a project, then go to **Settings → API Keys** and create a key pair. Use `https://cloud.langfuse.com` (EU) or `https://us.cloud.langfuse.com` (US) as `LANGFUSE_BASE_URL`.
 
