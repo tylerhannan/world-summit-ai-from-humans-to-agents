@@ -6,11 +6,21 @@ The demo from the talk "From human to agents" at World Summit AI Amsterdam 2026.
 2. **Accountability:** every action is attributed to a user, every step is on the record, and the agent's database user is read-only.
 3. **Feedback:** a prompt change is evaluated against known answers before it ships, and a plausible regression is caught.
 
+![50 agents querying ClickHouse at once](docs/load-test.gif)
+
 It's an agentic data stack in about 450 lines of Python:
 
 - Claude plans and writes SQL
 - The ClickHouse MCP server runs the SQL on ClickHouse Cloud as a read-only user
 - Langfuse traces every step, holds the prompt versions and runs the evals
+
+```mermaid
+flowchart LR
+  A["Agents<br/>Claude Haiku 4.5"] -- "tool calls over MCP" --> M["ClickHouse MCP server<br/>local, bearer token"]
+  M -- "SQL as read-only mcp_agent" --> C[("ClickHouse Cloud<br/>uk.uk_price_paid")]
+  A -- "traces, scores" --> L["Langfuse Cloud"]
+  L -. "prompt versions" .-> A
+```
 
 The dataset is [UK property prices](https://clickhouse.com/docs/get-started/sample-datasets/uk-price-paid): about 31M sales since 1995.
 
@@ -97,6 +107,8 @@ python load_test.py --agents 50
 
 50 agent sessions start at once, each with its own question and user. Each `done` line shows the user, how many queries the agent ran, how long it took and its answer. Then see it from ClickHouse's side: run query 1 from `sql/02_demo_query_log.sql` in the SQL console for the query count and p95 latency, and query 2 (as a chart) for queries per second.
 
+![Query log for the agent user: query count, p50 and p95 latency, rows scanned](docs/query-log.png)
+
 If you hit Anthropic rate limits, use `--agents 30`.
 
 ### 2. Every step on the record
@@ -107,6 +119,8 @@ In Langfuse:
 2. Open a trace (sort by latency to find one with several queries). Step through `llm step 1` → `clickhouse.run_query` → `llm step 2`. Each step has its latency, tokens and cost, and the SQL the agent wrote is in the `run_query` span.
 3. Each generation is linked to the prompt version that produced it (`uk-property-agent` v1).
 4. Open **Sessions** to see the whole run as one conversation.
+
+![A trace with four queries: the SQL the agent wrote and what ClickHouse returned](docs/trace.png)
 
 ### 3. Catching a regression
 
@@ -123,6 +137,10 @@ In Langfuse:
    ```
 3. In Langfuse, go to **Datasets** → `uk-property-eval` → **Experiments**, select the v1 and v2 runs and compare. Accuracy drops from 100% to about 20%. `used_database` stays at 1, because the agent still queried: it just queried the wrong rows. Latency and cost are flat, so no dashboard would have flagged it. Open a failed item to see `expected 861502, got 0`.
 4. Back in **Prompts**, `production` is still on v1. Caught before it shipped.
+
+![Experiment comparison: v2 scores 0.20 accuracy against 1.00 for v1](docs/regression-compare.png)
+
+![A failed v2 item: expected 861502, got 0](docs/regression-item.png)
 
 ## Notes
 
